@@ -29,11 +29,17 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Lumen — Smart Study Planner" },
+      {
+        name: "description",
+        content: "A calm, smart study planner with prioritized tasks, Pomodoro focus, and weekly insights.",
+      },
+      { name: "author", content: "Lumen" },
+      { property: "og:title", content: "Lumen — Smart Study Planner" },
+      {
+        property: "og:description",
+        content: "Plan, focus, and track your study sessions with a beautifully calm interface.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
