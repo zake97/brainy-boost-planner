@@ -43,6 +43,12 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Lumen — Smart Study Planner" },
+      { name: "description", content: "Smart Study Hub is a web application designed to help users organize their academic tasks and learning materials." },
+      { property: "og:description", content: "Smart Study Hub is a web application designed to help users organize their academic tasks and learning materials." },
+      { name: "twitter:description", content: "Smart Study Hub is a web application designed to help users organize their academic tasks and learning materials." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8163f8e3-4416-4197-9982-e08db4224194/id-preview-cdf13395--34b90d53-4683-412f-bfd0-74785323c2e6.lovable.app-1777362468232.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8163f8e3-4416-4197-9982-e08db4224194/id-preview-cdf13395--34b90d53-4683-412f-bfd0-74785323c2e6.lovable.app-1777362468232.png" },
     ],
     links: [
       {
