@@ -1,7 +1,7 @@
 Getting Started
 1. Clone the Repository
 Open a terminal and run:
-bashgit clone https://github.com/zake97/brainy-boost-planner.git
+git clone https://github.com/zake97/brainy-boost-planner.git
 
 
 2. Open the Project in VS Code
