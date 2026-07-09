@@ -1,108 +1,166 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, Square, Timer } from "lucide-react";
+import { Pause, Play, RotateCcw, Coffee, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Task } from "@/lib/planner-store";
+
+type Mode = "focus" | "break";
 
 interface Props {
-  onLog: (minutes: number) => void;
+  activeTask: Task | null;
+  onComplete: (minutes: number) => void;
+  onClear: () => void;
 }
 
-export function StudyTimer({ onLog }: Props) {
+const DURATIONS: Record<Mode, number> = {
+  focus: 25 * 60,
+  break: 5 * 60,
+};
+
+export function FocusTimer({ activeTask, onComplete, onClear }: Props) {
+  const [mode, setMode] = useState<Mode>("focus");
+  const [remaining, setRemaining] = useState(DURATIONS.focus);
   const [running, setRunning] = useState(false);
-  const [elapsedSec, setElapsedSec] = useState(0);
   const intervalRef = useRef<number | null>(null);
-  const startTsRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!running) return;
-    startTsRef.current = Date.now() - elapsedSec * 1000;
     intervalRef.current = window.setInterval(() => {
-      if (startTsRef.current) {
-        setElapsedSec(Math.floor((Date.now() - startTsRef.current) / 1000));
-      }
+      setRemaining((r) => {
+        if (r <= 1) {
+          window.clearInterval(intervalRef.current!);
+          setRunning(false);
+          if (mode === "focus") {
+            onComplete(DURATIONS.focus / 60);
+            setMode("break");
+            return DURATIONS.break;
+          } else {
+            setMode("focus");
+            return DURATIONS.focus;
+          }
+        }
+        return r - 1;
+      });
     }, 1000);
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running]);
-
-  function toggleRun() {
-    setRunning((r) => !r);
-  }
+  }, [running, mode, onComplete]);
 
   function reset() {
     setRunning(false);
-    setElapsedSec(0);
+    setRemaining(DURATIONS[mode]);
   }
 
-  function stopAndLog() {
+  function switchMode(m: Mode) {
+    setMode(m);
     setRunning(false);
-    if (intervalRef.current) window.clearInterval(intervalRef.current);
-    const minutes = Math.round(elapsedSec / 60);
-    if (minutes > 0) {
-      onLog(minutes);
-    }
-    setElapsedSec(0);
+    setRemaining(DURATIONS[m]);
   }
 
-  const h = Math.floor(elapsedSec / 3600).toString().padStart(2, "0");
-  const m = Math.floor((elapsedSec % 3600) / 60).toString().padStart(2, "0");
-  const s = (elapsedSec % 60).toString().padStart(2, "0");
+  const total = DURATIONS[mode];
+  const progress = 1 - remaining / total;
+  const min = Math.floor(remaining / 60).toString().padStart(2, "0");
+  const sec = (remaining % 60).toString().padStart(2, "0");
 
-  const started = elapsedSec > 0 || running;
+  // SVG ring
+  const r = 92;
+  const circ = 2 * Math.PI * r;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-[var(--shadow-paper)]">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-soft">Study session</p>
-          <h3 className="font-display text-xl font-semibold">
-            {running ? "In progress" : started ? "Paused" : "Not started"}
-          </h3>
-        </div>
-        <Timer className={cn("size-5", running ? "text-sage" : "text-ink-soft")} />
-      </div>
-
-      <div className="my-6 flex justify-center">
-        <span
-          className={cn(
-            "font-display text-5xl font-semibold tabular-nums tracking-tight",
-            running && "text-sage",
-          )}
-        >
-          {h}:{m}:{s}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-center gap-2">
-        {!started ? (
-          <Button size="lg" onClick={toggleRun} className="min-w-40">
-            <Play className="size-4" />
-            Start studying
-          </Button>
-        ) : (
-          <>
-            <Button size="lg" onClick={toggleRun} className="min-w-32">
-              {running ? <Pause className="size-4" /> : <Play className="size-4" />}
-              {running ? "Pause" : "Resume"}
-            </Button>
-            <Button size="lg" variant="outline" onClick={reset}>
-              <RotateCcw className="size-4" />
-            </Button>
-            <Button size="lg" variant="destructive" onClick={stopAndLog}>
-              <Square className="size-4" />
-              Stop &amp; log
-            </Button>
-          </>
-        )}
-      </div>
-
-      {!started && (
-        <p className="mt-3 text-center text-xs text-ink-soft">
-          Tracks toward your Today &amp; All time totals above.
-        </p>
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-[var(--shadow-paper)]",
       )}
+    >
+      <div className="absolute inset-0 -z-0 opacity-60" style={{ background: "var(--gradient-warm)" }} />
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-ink-soft">Focus</p>
+            <h3 className="font-display text-xl font-semibold">
+              {activeTask ? activeTask.title : "Pick a task"}
+            </h3>
+            {activeTask && (
+              <p className="text-xs text-muted-foreground">{activeTask.subject}</p>
+            )}
+          </div>
+          <div className="flex rounded-full bg-background/70 p-1 text-xs">
+            <button
+              onClick={() => switchMode("focus")}
+              className={cn(
+                "flex items-center gap-1 rounded-full px-3 py-1.5 transition",
+                mode === "focus" && "bg-primary text-primary-foreground",
+              )}
+            >
+              <Brain className="size-3" /> Focus
+            </button>
+            <button
+              onClick={() => switchMode("break")}
+              className={cn(
+                "flex items-center gap-1 rounded-full px-3 py-1.5 transition",
+                mode === "break" && "bg-sage text-primary-foreground",
+              )}
+            >
+              <Coffee className="size-3" /> Break
+            </button>
+          </div>
+        </div>
+
+        <div className="my-6 flex justify-center">
+          <div className="relative size-56">
+            <svg viewBox="0 0 200 200" className="size-full -rotate-90">
+              <circle
+                cx="100"
+                cy="100"
+                r={r}
+                fill="none"
+                stroke="oklch(0.88 0.02 70)"
+                strokeWidth="6"
+              />
+              <circle
+                cx="100"
+                cy="100"
+                r={r}
+                fill="none"
+                stroke={mode === "focus" ? "var(--terracotta)" : "var(--sage)"}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={circ}
+                strokeDashoffset={circ * (1 - progress)}
+                style={{ transition: "stroke-dashoffset 1s linear" }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="font-display text-6xl font-semibold tabular-nums tracking-tight">
+                {min}:{sec}
+              </span>
+              <span className="mt-1 text-xs uppercase tracking-[0.2em] text-ink-soft">
+                {mode === "focus" ? "Deep work" : "Recharge"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            size="lg"
+            onClick={() => setRunning((r) => !r)}
+            className="min-w-32"
+          >
+            {running ? <Pause className="size-4" /> : <Play className="size-4" />}
+            {running ? "Pause" : "Start"}
+          </Button>
+          <Button size="lg" variant="outline" onClick={reset}>
+            <RotateCcw className="size-4" />
+          </Button>
+          {activeTask && (
+            <Button size="lg" variant="ghost" onClick={onClear}>
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
