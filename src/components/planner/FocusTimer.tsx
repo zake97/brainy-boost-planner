@@ -21,17 +21,47 @@ export function FocusTimer({ activeTask, onComplete, onClear }: Props) {
   const [mode, setMode] = useState<Mode>("focus");
   const [remaining, setRemaining] = useState(DURATIONS.focus);
   const [running, setRunning] = useState(false);
+  // seconds accumulated in focus mode since last log/reset
+  const [focusElapsed, setFocusElapsed] = useState(0);
   const intervalRef = useRef<number | null>(null);
+
+  // Flush any accumulated focus seconds as whole minutes to the log.
+  // Returns the number of minutes flushed. Keeps leftover seconds < 60.
+  function flushFocus(): number {
+    let flushed = 0;
+    setFocusElapsed((sec) => {
+      const mins = Math.floor(sec / 60);
+      if (mins > 0) {
+        flushed = mins;
+        onComplete(mins);
+        return sec - mins * 60;
+      }
+      return sec;
+    });
+    return flushed;
+  }
 
   useEffect(() => {
     if (!running) return;
     intervalRef.current = window.setInterval(() => {
+      // accumulate elapsed focus time
+      if (mode === "focus") {
+        setFocusElapsed((e) => {
+          const next = e + 1;
+          // auto-log every full minute so Today/All time update live
+          if (next % 60 === 0) {
+            onComplete(1);
+            return 0;
+          }
+          return next;
+        });
+      }
       setRemaining((r) => {
         if (r <= 1) {
           window.clearInterval(intervalRef.current!);
           setRunning(false);
           if (mode === "focus") {
-            onComplete(DURATIONS.focus / 60);
+            // any leftover seconds already logged above via the % 60 path
             setMode("break");
             return DURATIONS.break;
           } else {
@@ -45,17 +75,36 @@ export function FocusTimer({ activeTask, onComplete, onClear }: Props) {
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
-  }, [running, mode, onComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, mode]);
+
+  function toggleRun() {
+    if (running) {
+      // pausing — flush any partial minute so it's counted
+      setRunning(false);
+      flushFocus();
+    } else {
+      setRunning(true);
+    }
+  }
 
   function reset() {
+    if (mode === "focus") flushFocus();
     setRunning(false);
     setRemaining(DURATIONS[mode]);
   }
 
   function switchMode(m: Mode) {
+    if (mode === "focus") flushFocus();
     setMode(m);
     setRunning(false);
     setRemaining(DURATIONS[m]);
+  }
+
+  function handleClear() {
+    if (mode === "focus") flushFocus();
+    setRunning(false);
+    onClear();
   }
 
   const total = DURATIONS[mode];
@@ -142,10 +191,16 @@ export function FocusTimer({ activeTask, onComplete, onClear }: Props) {
           </div>
         </div>
 
+        {mode === "focus" && (
+          <p className="mb-3 text-center text-xs text-ink-soft">
+            Logging live · {focusElapsed}s toward the next minute
+          </p>
+        )}
+
         <div className="flex items-center justify-center gap-2">
           <Button
             size="lg"
-            onClick={() => setRunning((r) => !r)}
+            onClick={toggleRun}
             className="min-w-32"
           >
             {running ? <Pause className="size-4" /> : <Play className="size-4" />}
@@ -155,7 +210,7 @@ export function FocusTimer({ activeTask, onComplete, onClear }: Props) {
             <RotateCcw className="size-4" />
           </Button>
           {activeTask && (
-            <Button size="lg" variant="ghost" onClick={onClear}>
+            <Button size="lg" variant="ghost" onClick={handleClear}>
               Clear
             </Button>
           )}
