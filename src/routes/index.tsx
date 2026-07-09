@@ -4,7 +4,6 @@ import { BookOpen, Sparkles } from "lucide-react";
 import { TaskForm } from "@/components/planner/TaskForm";
 import { TaskList } from "@/components/planner/TaskList";
 import { FocusTimer } from "@/components/planner/FocusTimer";
-import { StudyTimer } from "@/components/planner/StudyTimer";
 import { WeekView } from "@/components/planner/WeekView";
 import { StatsBar } from "@/components/planner/StatsBar";
 import { usePlanner, priorityScore, computeStats } from "@/lib/planner-store";
@@ -132,7 +131,7 @@ function Index() {
 
           {/* Right column */}
           <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
-             <StudyTimer onLog={(min) => logSession(null, min)} />
+             
             <FocusTimer
               activeTask={activeTask}
               onComplete={(min) => logSession(activeTask?.id ?? null, min)}
