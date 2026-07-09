@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Sparkles } from "lucide-react";
 import { TaskForm } from "@/components/planner/TaskForm";
 import { TaskList } from "@/components/planner/TaskList";
@@ -35,6 +35,8 @@ function Index() {
   const { tasks, sessions, addTask, toggleTask, deleteTask, logSession } = usePlanner();
   const [tab, setTab] = useState<Tab>("today");
   const [activeFocusId, setActiveFocusId] = useState<string | null>(null);
+  const [greetText, setGreetText] = useState("Welcome back");
+  useEffect(() => setGreetText(greeting()), []);
 
   const stats = useMemo(() => computeStats(tasks, sessions), [tasks, sessions]);
 
@@ -72,7 +74,7 @@ function Index() {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-ink-soft shadow-[var(--shadow-paper)]">
               <BookOpen className="size-3.5 text-primary" />
-              <span>{greeting()} — let's make it count</span>
+              <span>{greetText} — let's make it count</span>
             </div>
             <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-tight">
               Lumen<span className="text-primary">.</span>
