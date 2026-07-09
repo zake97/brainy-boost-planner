@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Square, Timer } from "lucide-react";
+import { Pause, Play, RotateCcw, Square, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +27,16 @@ export function StudyTimer({ onLog }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
-  function start() {
-    setRunning(true);
+  function toggleRun() {
+    setRunning((r) => !r);
   }
 
-  function stop() {
+  function reset() {
+    setRunning(false);
+    setElapsedSec(0);
+  }
+
+  function stopAndLog() {
     setRunning(false);
     if (intervalRef.current) window.clearInterval(intervalRef.current);
     const minutes = Math.round(elapsedSec / 60);
@@ -45,13 +50,15 @@ export function StudyTimer({ onLog }: Props) {
   const m = Math.floor((elapsedSec % 3600) / 60).toString().padStart(2, "0");
   const s = (elapsedSec % 60).toString().padStart(2, "0");
 
+  const started = elapsedSec > 0 || running;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-[var(--shadow-paper)]">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-ink-soft">Study session</p>
           <h3 className="font-display text-xl font-semibold">
-            {running ? "In progress" : "Not started"}
+            {running ? "In progress" : started ? "Paused" : "Not started"}
           </h3>
         </div>
         <Timer className={cn("size-5", running ? "text-sage" : "text-ink-soft")} />
@@ -69,20 +76,29 @@ export function StudyTimer({ onLog }: Props) {
       </div>
 
       <div className="flex items-center justify-center gap-2">
-        {!running ? (
-          <Button size="lg" onClick={start} className="min-w-40">
+        {!started ? (
+          <Button size="lg" onClick={toggleRun} className="min-w-40">
             <Play className="size-4" />
             Start studying
           </Button>
         ) : (
-          <Button size="lg" variant="destructive" onClick={stop} className="min-w-40">
-            <Square className="size-4" />
-            Stop &amp; log time
-          </Button>
+          <>
+            <Button size="lg" onClick={toggleRun} className="min-w-32">
+              {running ? <Pause className="size-4" /> : <Play className="size-4" />}
+              {running ? "Pause" : "Resume"}
+            </Button>
+            <Button size="lg" variant="outline" onClick={reset}>
+              <RotateCcw className="size-4" />
+            </Button>
+            <Button size="lg" variant="destructive" onClick={stopAndLog}>
+              <Square className="size-4" />
+              Stop &amp; log
+            </Button>
+          </>
         )}
       </div>
 
-      {!running && elapsedSec === 0 && (
+      {!started && (
         <p className="mt-3 text-center text-xs text-ink-soft">
           Tracks toward your Today &amp; All time totals above.
         </p>
