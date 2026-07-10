@@ -1,6 +1,6 @@
 import { Check, Trash2, Play, Flame } from "lucide-react";
 import type { Task } from "@/lib/planner-store";
-import { cn } from "@/lib/utils";
+import { cn, formatMinutes } from "@/lib/utils";
 
 interface Props {
   tasks: Task[];
@@ -34,9 +34,7 @@ export function TaskList({ tasks, onToggle, onDelete, onFocus, activeFocusId }: 
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
         <p className="font-display text-2xl text-ink-soft">A clean slate.</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Add your first task to start planning.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Add your first task to start planning.</p>
       </div>
     );
   }
@@ -71,12 +69,7 @@ export function TaskList({ tasks, onToggle, onDelete, onFocus, activeFocusId }: 
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p
-                  className={cn(
-                    "truncate font-medium",
-                    t.completed && "line-through",
-                  )}
-                >
+                <p className={cn("truncate font-medium", t.completed && "line-through")}>
                   {t.title}
                 </p>
                 {overdue && <Flame className="size-3.5 text-destructive shrink-0" />}
@@ -84,7 +77,7 @@ export function TaskList({ tasks, onToggle, onDelete, onFocus, activeFocusId }: 
               <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="truncate">{t.subject}</span>
                 <span>·</span>
-                <span>{t.estimatedMin}m</span>
+                <span>{formatMinutes(t.estimatedMin)}</span>
                 <span>·</span>
                 <span className={cn(overdue && "text-destructive font-medium")}>
                   {formatDue(t.dueDate)}
