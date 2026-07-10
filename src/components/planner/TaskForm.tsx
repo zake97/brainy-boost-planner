@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Priority } from "@/lib/planner-store";
+import { formatMinutes } from "@/lib/utils";
 
 interface Props {
   onAdd: (data: {
@@ -27,11 +28,15 @@ export function TaskForm({ onAdd }: Props) {
   const [subject, setSubject] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [dueDate, setDueDate] = useState(today);
-  const [estimatedMin, setEstimatedMin] = useState(45);
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(45);
+
+  const estimatedMin = hours * 60 + minutes;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+    if (estimatedMin <= 0) return;
     onAdd({
       title: title.trim(),
       subject: subject.trim() || "General",
@@ -43,7 +48,8 @@ export function TaskForm({ onAdd }: Props) {
     setSubject("");
     setPriority("medium");
     setDueDate(today);
-    setEstimatedMin(45);
+    setHours(0);
+    setMinutes(45);
   }
 
   return (
@@ -77,22 +83,50 @@ export function TaskForm({ onAdd }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="bg-background/60"
-          />
-          <Input
-            type="number"
-            min={5}
-            step={5}
-            value={estimatedMin}
-            onChange={(e) => setEstimatedMin(Number(e.target.value))}
-            className="bg-background/60"
-            placeholder="Minutes"
-          />
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="bg-background/60"
+        />
+        <div>
+          <label className="mb-1.5 block text-xs text-ink-soft">
+            How long do you want to study?
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative">
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                value={hours}
+                onChange={(e) => setHours(Math.max(0, Number(e.target.value)))}
+                className="bg-background/60 pr-10"
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-soft">
+                hr
+              </span>
+            </div>
+            <div className="relative">
+              <Input
+                type="number"
+                min={0}
+                max={59}
+                step={5}
+                value={minutes}
+                onChange={(e) => setMinutes(Math.min(59, Math.max(0, Number(e.target.value))))}
+                className="bg-background/60 pr-10"
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-soft">
+                min
+              </span>
+            </div>
+          </div>
+          {estimatedMin > 0 && (
+            <p className="mt-1 text-xs text-ink-soft">
+              Focus timer will run for {formatMinutes(estimatedMin)} on this task.
+            </p>
+          )}
         </div>
         <Button type="submit" className="h-11 mt-1">
           <Plus className="size-4" /> Add to plan
